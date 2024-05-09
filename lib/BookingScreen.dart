@@ -240,7 +240,7 @@ class _BookingScreenState extends State<BookingScreen> {
       }
 
       // Now check the final response
-      if (response.statusCode == 200 || response.statusCode == 504) {
+      if (response.statusCode == 200) {
         print("Booking Done");
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
