@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:abstract_bloc/abstract_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:get/get.dart';
 import 'ForgotPasswordScreen.dart';
 import 'ThemeModelCubit.dart';
 import 'main.dart';
@@ -29,7 +30,7 @@ class _LoginScreenState extends State<Login_Screen> {
   bool _isPasswordVisible = false;
   bool isProcessingRequest = false;
   bool isLoginSuccessful = false;
-  bool isNotLoginSuccessful = false;
+  bool isNotLoginSuccessful = true;
 // Declare and initialize isLoginSuccessful
   Color buttonColor = Colors.blue.shade900;
   FocusNode _emailFocus = FocusNode();
@@ -147,12 +148,10 @@ class _LoginScreenState extends State<Login_Screen> {
         // Store login status
         await _storeLoginStatus(userId);
 
-        // Set the isLoggedIn flag to true
         setState(() {
           isLoggedIn = true;
         });
 
-        // Set isLoginSuccessful to true
         isLoginSuccessful = true;
 
         // Navigate to the main screen
@@ -194,12 +193,18 @@ class _LoginScreenState extends State<Login_Screen> {
           ),
         );
 
+        print('Login failed: ${response.body}');
+        setState(() {
+          isNotLoginSuccessful = true;
+          print('state saved to login not successful');
+        });
+
+
         // Wait for the SnackBar to be dismissed before continuing
-        await completer.future;
-        isNotLoginSuccessful = true;
-        // Request login again
-        await Future.delayed(Duration(seconds: 2));
-        await login();
+
+        isProcessingRequest = false;
+        print('is processing false');
+
       }
     } catch (error) {
       // Handle login error
@@ -595,10 +600,11 @@ class _LoginScreenState extends State<Login_Screen> {
                                 setState(() {
                                   isProcessingRequest = false; // Reset flag when request is completed
                                 });
-                                if (isLoginSuccessful || isNotLoginSuccessful) {
-                                setState(() {
-                                  isProcessingRequest = false;
-                                });
+                                if (isNotLoginSuccessful) {
+                                  print( isNotLoginSuccessful);
+                                  setState(() {
+                                    isProcessingRequest = false;
+                                  });
                                 }
                               });
                             }

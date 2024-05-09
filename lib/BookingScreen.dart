@@ -11,10 +11,6 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-
-
-
-
 const kGoogleApiKey = 'AIzaSyBUtjCUeiVXJzek8eh30P7feb_dGLEVVjc';
 
 
@@ -173,9 +169,6 @@ class _BookingScreenState extends State<BookingScreen> {
       throw 'Could not launch $url'; // Handle error if unable to launch Google Maps
     }
   }
-
-
-
   //Book now
   Future<void>  Booknow() async {
     if (vehicleType.isEmpty || plateNumber.isEmpty) {
