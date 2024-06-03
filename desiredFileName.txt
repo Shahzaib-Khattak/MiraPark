@@ -1,0 +1,9 @@
+{
+  "de": [
+    "make",
+    "edit",
+    "delete",
+    "deleteVehicle",
+    "hour"
+  ]
+}
