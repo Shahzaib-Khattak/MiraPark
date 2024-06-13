@@ -49,7 +49,6 @@ class _PreviouseBookingState extends State<PreviouseBooking> {
   }
 
   void _checkBookingTime() {
-    // Compare current time with end time to determine if booking time is over
     DateTime endTime = DateTime.parse(widget.end);
     if (DateTime.now().isAfter(endTime)) {
       setState(() {
@@ -66,11 +65,9 @@ class _PreviouseBookingState extends State<PreviouseBooking> {
         body: jsonEncode({'userId': widget.userId}),
       );
 
-      // Follow redirects until we get a non-308 response
       while (response.statusCode == 308) {
         var redirectUrl = response.headers['location'];
 
-        // Make another POST request to the redirect URL
         response = await http.post(
           Uri.parse(redirectUrl ?? ''),
           headers: {'Content-Type': 'application/json'},
@@ -78,7 +75,6 @@ class _PreviouseBookingState extends State<PreviouseBooking> {
         );
       }
 
-      // Now check the final response
       if (response.statusCode == 200) {
         dynamic data = jsonDecode(response.body);
         if (data is List) {
@@ -159,6 +155,10 @@ class BookingCard extends StatefulWidget {
 
 class _BookingCardState extends State<BookingCard> {
   bool isBarrierUp = false;
+  @override
+  void initState() {
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -271,7 +271,7 @@ class _BookingCardState extends State<BookingCard> {
                             userId: widget.userId,
                             licensePlate: widget.licensePlate,
                             locationName: widget.location,
-                            distance: '', // You might want to pass actual values here
+                            distance: '',
                             latitude: 0.0,
                             longitude: 0.0,
                             StartTime: '',
@@ -357,7 +357,6 @@ class _BookingCardState extends State<BookingCard> {
 
   Future<void> sendBarrierDownRequest() async {
     if (widget.userId.isEmpty) {
-      displayToast("User ID is required", Colors.red);
       return;
     }
 
@@ -377,13 +376,6 @@ class _BookingCardState extends State<BookingCard> {
         );
       }
 
-      if (response.statusCode == 200) {
-        displayToast("Barrier is now down", Colors.green);
-      } else if (response.statusCode == 504) {
-        displayToast("No response received from MQTT", Colors.red);
-      } else {
-        displayToast("Failed to send barrier down message", Colors.red);
-      }
     } catch (error) {
       print('Error sending barrier down request: $error');
     }
@@ -391,7 +383,6 @@ class _BookingCardState extends State<BookingCard> {
 
   Future<void> sendBarrierUpRequest() async {
     if (widget.userId.isEmpty) {
-      displayToast("User ID is required", Colors.red);
       return;
     }
 
@@ -411,27 +402,8 @@ class _BookingCardState extends State<BookingCard> {
         );
       }
 
-      if (response.statusCode == 200) {
-        displayToast( AppLocalizations.of(context)!.barrierisnowdown, Colors.green);
-      } else if (response.statusCode == 504) {
-        displayToast (AppLocalizations.of(context)!.noresponsefrommqtt, Colors.red);
-      } else {
-        displayToast("Failed to send barrier up message", Colors.red);
-      }
     } catch (error) {
       print('Error sending barrier up request: $error');
     }
-  }
-
-  void displayToast(String message, Color backgroundColor) {
-    Fluttertoast.showToast(
-      msg: message,
-      toastLength: Toast.LENGTH_SHORT,
-      gravity: ToastGravity.BOTTOM,
-      timeInSecForIosWeb: 1,
-      backgroundColor: backgroundColor,
-      textColor: Colors.white,
-      fontSize: 16.0,
-    );
   }
 }

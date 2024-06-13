@@ -16,6 +16,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   @override
   void initState() {
     super.initState();
+    _checkLoginStatus();
     _controller = AnimationController(
       vsync: this,
       duration: Duration(milliseconds: 1500),
@@ -36,6 +37,19 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     );
 
     _controller.forward().whenComplete(() => checkLoginStatus());
+  }
+
+  Future<void> _checkLoginStatus() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? userId = prefs.getString('userId');
+
+    if (userId != null && userId.isNotEmpty) {
+      // User is logged in, navigate to MainScreen
+      Navigator.pushReplacementNamed(context, '/main_screen', arguments: userId);
+    } else {
+      // User is not logged in, navigate to LoginScreen
+      Navigator.pushReplacementNamed(context, '/login');
+    }
   }
 
   @override

@@ -1,14 +1,79 @@
 import 'package:flutter/material.dart';
 import 'AddVehicle.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class MyVehicle extends StatefulWidget {
+  final String userId;
+  MyVehicle({required this.userId});
   @override
   _MyVehicleState createState() => _MyVehicleState();
 }
 
 class _MyVehicleState extends State<MyVehicle> {
   List<Map<String, String>> vehicles = [];
+
+  @override
+  void initState() {
+    super.initState();
+    fetchVehicles(widget.userId);
+  }
+
+  Future<void> fetchVehicles(String userId) async {
+    final url = Uri.parse('http://mi-park-backend-iota.vercel.app/my-vehicles');
+
+    try {
+      var response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: json.encode({
+          'userId': userId,
+        }),
+      );
+
+      if (response.statusCode == 302 || response.statusCode == 308) {
+        final redirectUrl = response.headers['location'];
+        if (redirectUrl != null) {
+          print('Redirecting to $redirectUrl');
+          response = await http.post(
+            Uri.parse(redirectUrl),
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: json.encode({
+              'userId': userId,
+            }),
+          );
+        } else {
+          print('Failed to fetch vehicles. Status code: ${response.statusCode}, but no Location header');
+          return;
+        }
+      }
+
+      // Handle the final response
+      if (response.statusCode == 200) {
+        final List<dynamic> fetchedVehicles = json.decode(response.body);
+        setState(() {
+          vehicles = fetchedVehicles.map((vehicle) {
+            return {
+              'vehicleName': vehicle['type'].toString(),
+              'plateNumber': vehicle['licensePlate'].toString(),
+            };
+          }).toList();
+        });
+        print('Vehicles retrieved: $vehicles');
+      } else if (response.statusCode == 404) {
+        print('No vehicles found for this user.');
+      } else {
+        print('Failed to fetch vehicles. Status code: ${response.statusCode}');
+      }
+    } catch (error) {
+      print('Error fetching vehicles: $error');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +83,7 @@ class _MyVehicleState extends State<MyVehicle> {
     Future<void> navigateToAddVehicle() async {
       Map<String, String>? result = await Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => AddVehicle()),
+        MaterialPageRoute(builder: (context) => AddVehicle(userId: widget.userId)),
       );
 
       if (result != null) {
@@ -74,7 +139,7 @@ class _MyVehicleState extends State<MyVehicle> {
 
                   SizedBox(height: screenHeight * 0.03),
                   Text(
-                    AppLocalizations.of(context)!.myVehicle ,
+                    AppLocalizations.of(context)!.myVehicle,
                     style: TextStyle(fontSize: 30),
                   ),
                   Opacity(
@@ -176,14 +241,18 @@ class _MyVehicleState extends State<MyVehicle> {
                             children: [
                               SizedBox(height: screenHeight * 0.01),
                               Text(
-                                AppLocalizations.of(context)!.yourVehicles ,
+                                AppLocalizations.of(context)!.yourVehicles,
                                 style: TextStyle(fontSize: 25, color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black),
                               ),
                               Column(
                                 children: vehicles.asMap().entries.map((entry) {
                                   int index = entry.key;
                                   Map<String, String> vehicle = entry.value;
-                                  return _buildVehicleDetail(index, vehicle[AppLocalizations.of(context)!.vehicleName] ?? '', vehicle[AppLocalizations.of(context)!.plateNumber] ?? '');
+                                  return _buildVehicleDetail(
+                                    index,
+                                    vehicle['vehicleName'] ?? '',
+                                    vehicle['plateNumber'] ?? '',
+                                  );
                                 }).toList(),
                               ),
                             ],
@@ -200,7 +269,6 @@ class _MyVehicleState extends State<MyVehicle> {
       ),
     );
   }
-
 
   Widget _buildVehicleDetail(int index, String label, String value) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
@@ -252,5 +320,4 @@ class _MyVehicleState extends State<MyVehicle> {
       ),
     );
   }
-
 }

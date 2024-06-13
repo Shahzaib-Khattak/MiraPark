@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
 
 class AddVehicle extends StatefulWidget {
+  final String userId;
+  AddVehicle({required this.userId});
   @override
   _AddVehicleState createState() => _AddVehicleState();
 }
@@ -8,6 +13,57 @@ class AddVehicle extends StatefulWidget {
 class _AddVehicleState extends State<AddVehicle> {
   String _selectedVehicleType = 'luxury car';
   TextEditingController _numberPlateController = TextEditingController();
+
+  Future<void> storeVehicle(String userId, String type, String licensePlate) async {
+    final url = Uri.parse('http://mi-park-backend-iota.vercel.app/store-vehicle');
+    print('User ID: $userId');
+    try {
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: json.encode({
+          'userId': userId,
+          'type': type,
+          'licensePlate': licensePlate,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        print('Vehicle stored successfully');
+      } else if (response.statusCode == 308) {
+        final redirectUrl = response.headers['location'];
+        if (redirectUrl != null) {
+          print('Redirecting to $redirectUrl');
+          final newUrl = Uri.parse(redirectUrl);
+          final redirectResponse = await http.post(
+            newUrl,
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: json.encode({
+              'userId': userId,
+              'type': type,
+              'licensePlate': licensePlate,
+            }),
+          );
+
+          if (redirectResponse.statusCode == 200) {
+            print('Vehicle stored successfully after redirect');
+          } else {
+            print('Failed to store vehicle after redirect. Status code: ${redirectResponse.statusCode}');
+          }
+        } else {
+          print('Failed to store vehicle. Status code: 308, but no Location header');
+        }
+      } else {
+        print('Failed to store vehicle. Status code: ${response.statusCode}');
+      }
+    } catch (error) {
+      print('Error storing vehicle: $error');
+    }
+  }
 
   List<String> _vehicleTypes = [
     'luxury car',
@@ -63,15 +119,11 @@ class _AddVehicleState extends State<AddVehicle> {
             SizedBox(height: 20.0),
             ElevatedButton(
               onPressed: () {
-                String vehicleType = _selectedVehicleType;
-                String numberPlate = _numberPlateController.text;
-
-                // Pass the data back to the previous screen
-                Navigator.pop(context, {'Vehicle Name': vehicleType, 'Plate Number': numberPlate});
+                storeVehicle(widget.userId, _selectedVehicleType, _numberPlateController.text);
+                Navigator.pop(context, {'Vehicle Name': _selectedVehicleType, 'Plate Number': _numberPlateController.text});
               },
               child: Text('Save Vehicle'),
             ),
-
           ],
         ),
       ),

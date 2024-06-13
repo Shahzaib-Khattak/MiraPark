@@ -265,8 +265,8 @@ class _CombinedScreenState extends State<CombinedScreen> {
   void _loadCustomMarker() async {
     customIcon = await _getResizedBitmapDescriptor(
       'assets/app_icon.png', // Path to your custom image
-      100, // Width in pixels
-      100, // Height in pixels
+      50, // Width in pixels
+      50, // Height in pixels
     );
     setState(() {});
   }
@@ -612,12 +612,12 @@ class _CombinedScreenState extends State<CombinedScreen> {
         _markers.add(
           Marker(
             markerId: MarkerId('123456'),
-            position: LatLng(33.7296, 73.0368),
+            position: LatLng(54.334760, 10.119170),
             icon: customIcon ?? BitmapDescriptor.defaultMarker, // Use custom icon or default marker
-            infoWindow: InfoWindow(title: 'Faisal Mosque'),
+            infoWindow: InfoWindow(title: 'KITZ GmbH'),
             onTap: () {
               if (!isReserved) {
-                _displayBottomSheet(context, 'Faisal Mosque', LatLng(33.7296, 73.0368), userLocation, distance);
+                _displayBottomSheet(context, 'KITZ GmbH', LatLng(54.334760, 10.119170), userLocation, distance);
               }
             },
           ),

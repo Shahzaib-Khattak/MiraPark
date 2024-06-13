@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'Map_Screen.dart';
 import 'Login_Screen.dart';
-import 'ForgotPasswordScreen.dart';
 import 'Booking.dart';
 import 'Profile.dart';
 import 'splash_screen.dart';
@@ -63,25 +62,32 @@ void main() async {
 
 class MyApp extends StatelessWidget {
   final Locale locale;
-  final bool isLoggedIn;  // Add this line
+  final bool isLoggedIn;
+
+  const MyApp({Key? key, required this.locale, this.isLoggedIn = false})
+      : super(key: key);
 
 
-  const MyApp({Key? key, required this.locale, this.isLoggedIn = false}) : super(key: key);  // Modify this line
+  Future<void> saveUserId(String userId) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('userId', userId);
+  }
 
-
+  Future<String?> getUserId() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('userId');
+  }
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => ThemeModeCubit(), // Create the ThemeModeCubit here
+      create: (context) => ThemeModeCubit(),
       child: BlocBuilder<ThemeModeCubit, ThemeMode>(
         builder: (context, themeMode) {
           return MaterialApp(
             title: 'MiPark',
             theme: ThemeData.light(),
-            builder: EasyLoading.init(),  // Add this line
-
-
+            builder: EasyLoading.init(),
             darkTheme: ThemeData.dark().copyWith(
               scaffoldBackgroundColor: Colors.grey.shade900,
               textTheme: TextTheme(
@@ -95,18 +101,15 @@ class MyApp extends StatelessWidget {
             debugShowCheckedModeBanner: false,
             routes: {
               '/': (context) => SplashScreen(),
-              '/login': (context) => Login_Screen(updateLocale: updateLocale ),
-              '/MainScreen': (context) => MainScreen(updateLocale: updateLocale, userId: '123', locationName: '',),
-              '/main_screen': (context) => MainScreen(updateLocale: updateLocale, userId: '123', locationName: '',),
-              // '/ProfileScreen': (context) => Profile(updateLocale: updateLocale),
-              // '/BookingsScreen': (context) => BookingScreen(userId: '123'),
-              // '/SignUpVerificationScreen': (context) => SignUpVerificationScreen(isFromForgotPassword: false),
-              // '/SignUpVerificationScreenForgotPassword': (context) => SignUpVerificationScreen(isFromForgotPassword: true),
-              // '/forgot_password': (context) => ForgotPasswordScreen(showPasswordFields: false)
+              '/login': (context) => Login_Screen(updateLocale: updateLocale),
+              '/main_screen': (context) {
+                final args = ModalRoute.of(context)!.settings.arguments as String;
+                return MainScreen(updateLocale: updateLocale, userId: args, locationName: '');
+              },
             },
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
-            locale: locale,  // Set locale dynamically
+            locale: locale,
           );
         },
       ),
@@ -119,16 +122,12 @@ class MyApp extends StatelessWidget {
 // Define a method to update the locale
 void updateLocale(Locale locale) {
   if (locale.languageCode == 'de') {
-    // Load German translations
     print('Loading German translations...');
     AppLocalizations.delegate.load(locale).then((_) {
-      // Update the locale to German
-      // No need to use setState, just pass the new locale directly
-      print('German translations loaded.');
+        print('German translations loaded.');
       runApp(MyApp(locale: locale));
     });
   } else {
-    // Load English translations by default
     print('Loading English translations...');
     AppLocalizations.delegate.load(Locale('en', 'US')).then((_) {
       print('English Translations loaded.');
@@ -141,9 +140,13 @@ void updateLocale(Locale locale) {
 class MainScreen extends StatefulWidget {
   final String userId;
   final Function(Locale) updateLocale;
-  // final void Function(Locale) updateLocale;
 
-  const MainScreen({Key? key, required this.updateLocale, required this.userId, required String locationName}) : super(key: key);
+  const MainScreen({
+    Key? key,
+    required this.updateLocale,
+    required this.userId,
+    required String locationName,
+  }) : super(key: key);
 
   @override
   _MainScreenState createState() => _MainScreenState();
@@ -157,15 +160,10 @@ class _MainScreenState extends State<MainScreen> {
   @override
   void initState() {
     super.initState();
-
-    // Create an instance of AwesomeNotifications
     AwesomeNotifications awesomeNotifications = AwesomeNotifications();
-
-    // Check if notification is allowed
     awesomeNotifications.isNotificationAllowed().then((isAllowed) {
 
       if (!isAllowed) {
-        // Notification is not allowed, show a prompt to enable it
         AlertDialog alert = AlertDialog(
           title: Text('Notification Permission'),
           content: Text('Please enable notification permission to use this app.'),
@@ -184,7 +182,6 @@ class _MainScreenState extends State<MainScreen> {
           builder: (BuildContext context) {
             return alert;
           },
-          // Prompt user to turn on notifications
         );
       }
 
@@ -227,9 +224,7 @@ class _MainScreenState extends State<MainScreen> {
         },
       );
     } else if (permission == LocationPermission.deniedForever) {
-      // Handle case where user has previously denied permission permanently
-      // You may want to provide some guidance to the user on how to enable the permission
-    }
+   }
   }
   @override
 
