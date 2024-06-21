@@ -6,18 +6,15 @@ import 'BookingScreen.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
-
 class PreviouseBooking extends StatefulWidget {
   final String userId;
   final String licensePlate;
   final String locationName;
   final String distance;
-  final int latitude;
-  final int longitude;
-
-  final StartTime;
-
-  final EndTime;
+  final double latitude;
+  final double longitude;
+  final String StartTime;
+  final String EndTime;
 
   const PreviouseBooking({
     Key? key,
@@ -30,8 +27,6 @@ class PreviouseBooking extends StatefulWidget {
     required this.StartTime,
     required this.EndTime,
   }) : super(key: key);
-
-  String get end => DateTime.now().add(const Duration(minutes: 30)).toIso8601String();
 
   @override
   _PreviouseBookingState createState() => _PreviouseBookingState();
@@ -49,7 +44,7 @@ class _PreviouseBookingState extends State<PreviouseBooking> {
   }
 
   void _checkBookingTime() {
-    DateTime endTime = DateTime.parse(widget.end);
+    DateTime endTime = DateTime.tryParse(widget.EndTime) ?? DateTime.now();
     if (DateTime.now().isAfter(endTime)) {
       setState(() {
         _isBookingTimeOver = true;
@@ -80,6 +75,19 @@ class _PreviouseBookingState extends State<PreviouseBooking> {
         if (data is List) {
           setState(() {
             bookings = List<Map<String, String>>.from(data.map((e) => _convertDynamicToString(e)));
+            // Sort bookings: active first, then expired sorted by end time descending
+            bookings.sort((a, b) {
+              if (a['status'] == 'active' && b['status'] != 'active') {
+                return -1;
+              } else if (a['status'] != 'active' && b['status'] == 'active') {
+                return 1;
+              } else if (a['status'] == 'expired' && b['status'] == 'expired') {
+                DateTime endA = DateTime.tryParse(a['end']!) ?? DateTime.now();
+                DateTime endB = DateTime.tryParse(b['end']!) ?? DateTime.now();
+                return endB.compareTo(endA); // Descending order
+              }
+              return 0;
+            });
           });
           print('Received bookings data: $bookings'); // Print received data
         } else {
@@ -117,8 +125,10 @@ class _PreviouseBookingState extends State<PreviouseBooking> {
               location: bookings[index]['location'] ?? '',
               status: bookings[index]['status'] ?? '',
               isBookingTimeOver: _isBookingTimeOver,
-              bookingEndTime: widget.end,
+              bookingEndTime: widget.EndTime,
               userId: widget.userId,
+              euid: bookings[index]['euid'] ?? '',
+              username: bookings[index]['username'] ?? '',
             );
           },
         ),
@@ -136,6 +146,8 @@ class BookingCard extends StatefulWidget {
   final bool isBookingTimeOver;
   final String bookingEndTime;
   final String userId;
+  final String euid;
+  final String username;
 
   const BookingCard({
     Key? key,
@@ -146,7 +158,7 @@ class BookingCard extends StatefulWidget {
     required this.status,
     required this.isBookingTimeOver,
     required this.bookingEndTime,
-    required this.userId,
+    required this.userId, required this.euid, required this.username,
   }) : super(key: key);
 
   @override
@@ -155,6 +167,7 @@ class BookingCard extends StatefulWidget {
 
 class _BookingCardState extends State<BookingCard> {
   bool isBarrierUp = false;
+
   @override
   void initState() {
     super.initState();
@@ -162,8 +175,6 @@ class _BookingCardState extends State<BookingCard> {
 
   @override
   Widget build(BuildContext context) {
-    DateTime.parse(widget.bookingEndTime);
-
     return Card(
       margin: EdgeInsets.all(16.0),
       color: Colors.green[300],
@@ -178,27 +189,27 @@ class _BookingCardState extends State<BookingCard> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              AppLocalizations.of(context)!.licenseplate + ': ${widget.licensePlate}',
+              'License Plate: ${widget.licensePlate}',
               style: TextStyle(fontSize: 16.0),
             ),
             SizedBox(height: 8.0),
             Text(
-              AppLocalizations.of(context)!.starttime +': ${widget.start}',
+              'Start Time: ${widget.start}',
               style: TextStyle(fontSize: 16.0),
             ),
             SizedBox(height: 8.0),
             Text(
-              AppLocalizations.of(context)!.endtime + ': ${widget.end}',
+              'End Time: ${widget.end}',
               style: TextStyle(fontSize: 16.0),
             ),
             SizedBox(height: 8.0),
             Text(
-              AppLocalizations.of(context)!.location +': ${widget.location}',
+              'Location: ${widget.location}',
               style: TextStyle(fontSize: 16.0),
             ),
             SizedBox(height: 8.0),
             Text(
-              AppLocalizations.of(context)!.status + ': ${widget.status}',
+              'Status: ${widget.status}',
               style: TextStyle(fontSize: 16.0),
             ),
             SizedBox(height: 8.0),
@@ -215,18 +226,21 @@ class _BookingCardState extends State<BookingCard> {
                       shape: StadiumBorder(),
                       alignment: Alignment.center,
                     ),
-                    child: Text(AppLocalizations.of(context)!.cancelbooking,
-                        style: TextStyle(color: Colors.white)),
+                    child: Text(
+                      'Cancel Booking',
+                      style: TextStyle(color: Colors.white),
+                    ),
                   ),
                   Column(
                     children: [
                       Text(
-                        AppLocalizations.of(context)!.barrierstatus ,
+                        'Barrier Status',
                         style: TextStyle(
                           color: Colors.black,
                           fontSize: 16.0,
                           fontWeight: FontWeight.bold,
-                        ),),
+                        ),
+                      ),
                       Switch(
                         value: isBarrierUp,
                         onChanged: (value) {
@@ -244,7 +258,6 @@ class _BookingCardState extends State<BookingCard> {
                         activeTrackColor: Colors.white,
                         inactiveThumbColor: Colors.black,
                       ),
-
                       Text(
                         isBarrierUp ? 'Barrier Down' : 'Barrier Up',
                         style: TextStyle(
@@ -254,8 +267,7 @@ class _BookingCardState extends State<BookingCard> {
                         ),
                       ),
                     ],
-                  )
-
+                  ),
                 ],
               ),
             if (widget.status == 'expired')
@@ -276,6 +288,8 @@ class _BookingCardState extends State<BookingCard> {
                             longitude: 0.0,
                             StartTime: '',
                             EndTime: '',
+                            euid: widget.euid,
+                            username: widget.username,
                           ),
                         ),
                       );
@@ -285,8 +299,9 @@ class _BookingCardState extends State<BookingCard> {
                       alignment: Alignment.centerRight,
                     ),
                     child: Text(
-                      AppLocalizations.of(context)!.rebook ,
-                      style: TextStyle(color: Colors.white),),
+                      'Rebook',
+                      style: TextStyle(color: Colors.white),
+                    ),
                   ),
                 ],
               ),
@@ -295,6 +310,7 @@ class _BookingCardState extends State<BookingCard> {
       ),
     );
   }
+
 
   Future<void> cancelBooking(BuildContext context) async {
     try {
@@ -331,6 +347,7 @@ class _BookingCardState extends State<BookingCard> {
             'licensePlate': widget.licensePlate,
             'location': widget.location,
           }),
+
         );
       }
 
@@ -360,27 +377,44 @@ class _BookingCardState extends State<BookingCard> {
       return;
     }
 
-    try {
-      var response = await http.post(
-        Uri.parse('http://mi-park-backend-iota.vercel.app/barrier_down'),
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode({'userId': widget.userId}),
-      );
+    final url = 'http://mi-park-backend-iota.vercel.app/barrier_down';
+    final headers = {'Content-Type': 'application/json'};
+    final body = json.encode({
+      'userId': widget.userId,
+      'euid': widget.euid,
+      'username': widget.username,
+    });
 
+    try {
+
+      var response = await http.post(
+        Uri.parse(url),
+        headers: headers,
+        body: body,
+      );
       while (response.statusCode == 308) {
         var redirectUrl = response.headers['location'];
+        if (redirectUrl == null) {
+          throw Exception('Redirect URL is null');
+        }
+
+        print('Redirecting to: $redirectUrl');
+
         response = await http.post(
-          Uri.parse(redirectUrl ?? ''),
-          headers: {'Content-Type': 'application/json'},
-          body: jsonEncode({'userId': widget.userId}),
+          Uri.parse(redirectUrl),
+          headers: headers,
+          body: body,
         );
+
+        print('Redirect response status code: ${response.statusCode}');
+        print('Redirect response headers: ${response.headers}');
+        print('Redirect response body: ${response.body}');
       }
 
     } catch (error) {
       print('Error sending barrier down request: $error');
     }
   }
-
   Future<void> sendBarrierUpRequest() async {
     if (widget.userId.isEmpty) {
       return;
@@ -390,7 +424,11 @@ class _BookingCardState extends State<BookingCard> {
       var response = await http.post(
         Uri.parse('http://mi-park-backend-iota.vercel.app/barrier_up'),
         headers: {'Content-Type': 'application/json'},
-        body: json.encode({'userId': widget.userId}),
+        body: json.encode({
+          'userId': widget.userId,
+          'euid': widget.euid,
+          'username': widget.username,
+        }),
       );
 
       while (response.statusCode == 308) {
@@ -398,7 +436,10 @@ class _BookingCardState extends State<BookingCard> {
         response = await http.post(
           Uri.parse(redirectUrl ?? ''),
           headers: {'Content-Type': 'application/json'},
-          body: jsonEncode({'userId': widget.userId}),
+          body: jsonEncode({
+            'userId': widget.userId,
+            'euid': widget.euid,
+            'username': widget.username,}),
         );
       }
 

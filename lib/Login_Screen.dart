@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:get/get.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'ForgotPasswordScreen.dart';
 import 'ThemeModelCubit.dart';
 import 'main.dart';
@@ -41,8 +42,67 @@ class _LoginScreenState extends State<Login_Screen> {
   TextEditingController _fullnameController = TextEditingController();
   TextEditingController _passwordController = TextEditingController();
   TextEditingController _phoneController = TextEditingController();
+  GoogleSignIn _googleSignIn = GoogleSignIn(scopes: ['email']);
+
+
+  Future<void> _handleSignIn() async {
+    try {
+      print('enter handle sign in with google');
+      GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      print('this part is okay');
+      if (googleUser != null) {
+        GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+        String? idToken = googleAuth.idToken;
+        if (idToken != null) {
+          // Send the ID token to your backend for verification and user creation
+          final response = await http.post(
+            Uri.parse('http://mi-park-backend-iota.vercel.app/api/auth/google'),
+            headers: <String, String>{
+              'Content-Type': 'application/json; charset=UTF-8',
+            },
+            body: jsonEncode(<String, String>{
+              'idToken': idToken,
+            }),
+          );
+
+          if (response.statusCode == 200) {
+            Fluttertoast.showToast(
+              msg: 'Login Successful',
+              toastLength: Toast.LENGTH_SHORT,
+              gravity: ToastGravity.BOTTOM,
+              backgroundColor: Colors.redAccent,
+              textColor: Colors.white,
+              fontSize: 16.0,
+            );
+            print('Successfully signed in');
+          } else {
+            print('Failed to sign in');
+          }
+        }
+      }
+    } catch (error) {
+      print(error);
+    }
+  }
+
 
   Future<void> signUp() async {
+    if (_fullnameController.text.isEmpty ||
+        _emailController.text.isEmpty ||
+        _phoneController.text.isEmpty ||
+        _passwordController.text.isEmpty) {
+      // Display toast message for missing input
+      Fluttertoast.showToast(
+        msg: 'Please input all fields',
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+        backgroundColor: Colors.redAccent,
+        textColor: Colors.white,
+        fontSize: 16.0,
+      );
+      return; // Exit the function early
+    }
+
     try {
       var registerResponse = await http.post(
         Uri.parse('http://mi-park-backend-iota.vercel.app/register'),
@@ -74,6 +134,14 @@ class _LoginScreenState extends State<Login_Screen> {
 
       // Now check the final response
       if (registerResponse.statusCode == 201) {
+        Fluttertoast.showToast(
+          msg: 'Registration successful!',
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+          backgroundColor: Colors.green,
+          textColor: Colors.white,
+          fontSize: 16.0,
+        );
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -82,40 +150,46 @@ class _LoginScreenState extends State<Login_Screen> {
         );
       } else {
         // Registration failed
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: Text('Registration Error'),
-            content: Text(registerResponse.body),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text('OK'),
-              ),
-            ],
-          ),
+        Fluttertoast.showToast(
+          msg: 'Registration Error: ${registerResponse.body}',
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+          backgroundColor: Colors.redAccent,
+          textColor: Colors.white,
+          fontSize: 16.0,
         );
       }
     } catch (error) {
       // Handle network or other errors
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text('Error'),
-          content: Text('Something went wrong. Please try again later.'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text('OK'),
-            ),
-          ],
-        ),
+      Fluttertoast.showToast(
+        msg: 'Something went wrong. Please try again later.',
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+        backgroundColor: Colors.redAccent,
+        textColor: Colors.white,
+        fontSize: 16.0,
       );
     }
   }
 
 
+
+
   Future<void> login() async {
+    // Check if email and password fields are empty
+    if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
+      // Display error message using a Toast
+      Fluttertoast.showToast(
+        msg: 'Please input all fields',
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+        backgroundColor: Colors.redAccent,
+        textColor: Colors.white,
+        fontSize: 16.0,
+      );
+      return; // Exit the function early
+    }
+
     try {
       var response = await http.post(
         Uri.parse('http://mi-park-backend-iota.vercel.app/login'),
@@ -155,6 +229,16 @@ class _LoginScreenState extends State<Login_Screen> {
 
         isLoginSuccessful = true;
 
+        // Display success message using a Toast
+        Fluttertoast.showToast(
+          msg: 'Login successful!',
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+          backgroundColor: Colors.green,
+          textColor: Colors.white,
+          fontSize: 16.0,
+        );
+
         // Navigate to the main screen
         Navigator.pushReplacement(
           context,
@@ -164,34 +248,13 @@ class _LoginScreenState extends State<Login_Screen> {
         );
       } else if (response.statusCode == 400 || response.statusCode == 401 || response.statusCode == 404) {
         // Login failed, show error message
-        final completer = Completer<void>();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor: Colors.redAccent, // Background color
-            duration: Duration(seconds: 1),
-            content: Row(
-              children: [
-                Icon(Icons.error_outline, color: Colors.white), // Error icon
-                SizedBox(width: 10), // Spacer
-                Expanded(
-                  child: Text(
-                    'Invalid email or password',
-                    style: TextStyle(color: Colors.white), // Text color
-                  ),
-                ),
-              ],
-            ),
-            action: SnackBarAction(
-              label: 'Dismiss', // Action label
-              textColor: Colors.white, // Action text color
-              onPressed: () {
-                ScaffoldMessenger.of(context).hideCurrentSnackBar(); // Dismiss the Snackbar
-                completer.complete(); // Complete the Future
-              },
-            ),
-            elevation: 8, // Elevation
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)), // Rounded corners
-          ),
+        Fluttertoast.showToast(
+          msg: 'Invalid email or password',
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+          backgroundColor: Colors.redAccent,
+          textColor: Colors.white,
+          fontSize: 16.0,
         );
 
         print('Login failed: ${response.body}');
@@ -200,18 +263,21 @@ class _LoginScreenState extends State<Login_Screen> {
           print('state saved to login not successful');
         });
 
-
-        // Wait for the SnackBar to be dismissed before continuing
-
         isProcessingRequest = false;
         print('is processing false');
-
       }
     } catch (error) {
       // Handle login error
       print('Error during login: $error');
       // Show generic error message
-      await showErrorDialog('Something went wrong. Please try again later.');
+      Fluttertoast.showToast(
+        msg: 'Something went wrong. Please try again later.',
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+        backgroundColor: Colors.redAccent,
+        textColor: Colors.white,
+        fontSize: 16.0,
+      );
     }
   }
 
@@ -630,7 +696,9 @@ class _LoginScreenState extends State<Login_Screen> {
                     Padding(
                       padding: const EdgeInsets.all(20.0),
                       child: TextButton(
-                        onPressed: _signInWithGoogle,
+                        onPressed: () {
+                          _handleSignIn();
+                        },
                         style: ButtonStyle(
                           foregroundColor: MaterialStateProperty.resolveWith((states) {
                             // Check if the theme mode is light or dark
@@ -667,41 +735,5 @@ class _LoginScreenState extends State<Login_Screen> {
     );
   }
 
-  Future<void> _signInWithGoogle() async {
-    try {
-      // Initialize GoogleSignIn
-      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
-
-      // Handle the sign-in process...
-      if (googleUser != null) {
-        // Now, you have the Google user account, you can proceed with authentication
-        final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-
-        // Exchange Google ID token with your backend to get a custom authentication token
-        final response = await http.post(
-          'YOUR_BACKEND_AUTH_ENDPOINT' as Uri, // Your backend authentication endpoint
-          headers: <String, String>{'Content-Type': 'application/json'},
-          body: jsonEncode(<String, String>{
-            'token': googleAuth.idToken!,
-          }),
-        );
-
-        if (response.statusCode == 200) {
-         Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => MainScreen(updateLocale: updateLocale, userId: '', locationName: '')),
-          );
-        } else {
-          // Handle error from your backend
-          print('Failed to authenticate with backend: ${response.body}');
-        }
-      } else {
-        // User cancelled the sign-in process
-        print('User cancelled the sign-in process.');
-      }
-    } catch (error) {
-      print('Error signing in with Google: $error');
-      // Handle the error
-    }
-  }
 }
+

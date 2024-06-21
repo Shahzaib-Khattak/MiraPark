@@ -108,7 +108,7 @@ class _CombinedScreenState extends State<CombinedScreen> {
     return distanceInKilometers;
   }
 
-  Future<void> _displayBottomSheet(BuildContext context, String markerTitle, LatLng markerPosition, LatLng userLocation, double distance) {
+  Future<void> _displayBottomSheet(BuildContext context, String markerTitle, LatLng markerPosition, LatLng userLocation, double distance, {required String euid, required String username}) {
     double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
 
@@ -184,7 +184,7 @@ class _CombinedScreenState extends State<CombinedScreen> {
                         latitude: markerPosition.latitude,
                         longitude: markerPosition.longitude,
                         locationName: markerTitle,
-                        distance: distance.toStringAsFixed(2), licensePlate: '', StartTime: '', EndTime: '',
+                        distance: distance.toStringAsFixed(2), licensePlate: '', StartTime: '', EndTime: '', euid: euid, username: username
                       ),
                     ),
                   );
@@ -602,7 +602,7 @@ class _CombinedScreenState extends State<CombinedScreen> {
             infoWindow: InfoWindow(title: 'Islamabad, Pakistan'),
             onTap: () {
               if (!isReserved) {
-                _displayBottomSheet(context, 'Islamabad, Pakistan', LatLng(33.6844 , 73.0479), userLocation, distance);
+                _displayBottomSheet(context, 'Islamabad, Pakistan', LatLng(33.6844 , 73.0479), userLocation, distance, euid: 'eui-70b3d57ed8003056', username: 'raza242424@miraee');
               }
             },
           ),
@@ -617,7 +617,7 @@ class _CombinedScreenState extends State<CombinedScreen> {
             infoWindow: InfoWindow(title: 'KITZ GmbH'),
             onTap: () {
               if (!isReserved) {
-                _displayBottomSheet(context, 'KITZ GmbH', LatLng(54.334760, 10.119170), userLocation, distance);
+                _displayBottomSheet(context, 'KITZ GmbH', LatLng(54.334760, 10.119170), userLocation, distance, euid: 'eui-0080e115000add43', username: 'raza242424@miraee');
               }
             },
           ),

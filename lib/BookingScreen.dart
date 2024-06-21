@@ -24,6 +24,8 @@ class BookingScreen extends StatefulWidget {
   final String licensePlate;
   final String StartTime;
   final String EndTime;
+  final String euid;
+  final String username;
 
 
   BookingScreen({
@@ -35,6 +37,8 @@ class BookingScreen extends StatefulWidget {
     required this.longitude,
     required this.StartTime,
     required this.EndTime,
+    required this.euid,
+    required this.username,
 
   });
 
@@ -197,6 +201,8 @@ class _BookingScreenState extends State<BookingScreen> {
           'userId': widget.userId,
           'price': '10',
           'Email': 'naseem.shahzaib22@gmail.com',
+           'euid': widget.euid,
+           'username': widget.username,
         }),
       );
 
@@ -213,6 +219,8 @@ class _BookingScreenState extends State<BookingScreen> {
             'userId': widget.userId,
             'price': '10',
             'Email': 'naseem.shahzaib22@gmail.com',
+            'euid': widget.euid,
+            'username': widget.username,
           }),
         );
       }
