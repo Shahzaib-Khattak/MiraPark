@@ -54,7 +54,6 @@ class _LoginScreenState extends State<Login_Screen> {
         GoogleSignInAuthentication googleAuth = await googleUser.authentication;
         String? idToken = googleAuth.idToken;
         if (idToken != null) {
-          // Send the ID token to your backend for verification and user creation
           final response = await http.post(
             Uri.parse('http://mi-park-backend-iota.vercel.app/api/auth/google'),
             headers: <String, String>{
@@ -73,6 +72,12 @@ class _LoginScreenState extends State<Login_Screen> {
               backgroundColor: Colors.redAccent,
               textColor: Colors.white,
               fontSize: 16.0,
+            );
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => MainScreen(userId: 'userId', updateLocale: widget.updateLocale, locationName: 'Mira Park'),
+              ),
             );
             print('Successfully signed in');
           } else {

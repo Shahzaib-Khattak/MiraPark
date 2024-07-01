@@ -16,10 +16,6 @@ import 'dart:math' show cos, sqrt, asin;
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:image/image.dart' as img;
 import 'dart:ui' as ui;
-import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:image/image.dart' as img;
-
 
 
 
@@ -32,24 +28,24 @@ class CombinedScreen extends StatefulWidget {
   @override
   _CombinedScreenState createState() => _CombinedScreenState();
 }
-// Widget offerCard(String title, String subtitle, String price, String duration, int distance) {
-//   return ListTile(
-//     title: Text(title),
-//     subtitle: Text(subtitle),
-//     trailing: Column(
-//       mainAxisAlignment: MainAxisAlignment.center,
-//       crossAxisAlignment: CrossAxisAlignment.end,
-//       children: <Widget>[
-//         Text(price, style: TextStyle(color: Colors.blue, fontSize: 16)),
-//         Text(duration, style: TextStyle(color: Colors.grey, fontSize: 12)),
-//       ],
-//     ),
-//     leading: Icon(Icons.my_location),
-//     onTap: () {
-//       // Action on tap
-//     },
-//   );
-// }
+Widget offerCard(String title, String subtitle, String price, String duration, int distance) {
+  return ListTile(
+    title: Text(title),
+    subtitle: Text(subtitle),
+    trailing: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: <Widget>[
+        Text(price, style: TextStyle(color: Colors.blue, fontSize: 16)),
+        Text(duration, style: TextStyle(color: Colors.grey, fontSize: 12)),
+      ],
+    ),
+    leading: Icon(Icons.my_location),
+    onTap: () {
+      // Action on tap
+    },
+  );
+}
 
 
 class _CombinedScreenState extends State<CombinedScreen> {
@@ -300,6 +296,7 @@ class _CombinedScreenState extends State<CombinedScreen> {
               onChanged: _handleSearchTextChanged,
             ),
           ),
+
           Positioned(
             bottom: 20,
             left: 20,
@@ -309,66 +306,66 @@ class _CombinedScreenState extends State<CombinedScreen> {
               icon: const Icon(Icons.my_location),
             ),
           ),
-          // Positioned(
-          //   bottom: 0,
-          //   left: 0,
-          //   right: 0,
-          //   child: GestureDetector(
-          //     onVerticalDragUpdate: (details) {
-          //       setState(() {
-          //         // Update the container height based on user drag
-          //         containerHeight += details.primaryDelta!;
-          //         containerHeight = containerHeight.clamp(100.0, MediaQuery.of(context).size.height);
-          //       });
-          //     },
-          //     onVerticalDragEnd: (details) {
-          //       setState(() {
-          //         // Determine if the container should open or close based on the drag direction
-          //         isContainerOpen = details.primaryVelocity! < 0;
-          //         if (!isContainerOpen) {
-          //           // Reset to initial height if dragging down and container is closing
-          //           containerHeight = 100.0;
-          //         }
-          //       });
-          //     },
-          //     child: AnimatedContainer(
-          //       duration: Duration(milliseconds: 300),
-          //       curve: Curves.easeInOut,
-          //       height: isContainerOpen ? MediaQuery.of(context).size.height : containerHeight,
-          //       color: Colors.white,
-          //       child: Column(
-          //         crossAxisAlignment: CrossAxisAlignment.center,
-          //         children: <Widget>[
-          //           Row(
-          //             mainAxisAlignment: MainAxisAlignment.center,
-          //             children: [
-          //               Icon(Icons.arrow_drop_up),
-          //               Text(
-          //                 "Offers near You",
-          //                 style: TextStyle(
-          //                   fontSize: 18,
-          //                   fontWeight: FontWeight.w400,
-          //                 ),
-          //               ),
-          //             ],
-          //           ),
-          //           Expanded(
-          //             child: ListView(
-          //               children: <Widget>[
-          //                 offerCard("Night ticket", "Park One im Mona Einkaufsz...", "8.00 €", "14 hrs", 5257),
-          //                 offerCard("1 week ticket", "Park One im Mona Einkaufsz...", "45.00 €", "7 days", 5257),
-          //                 offerCard("2-Weeks-ticket", "Park One im Mona Einkaufsz...", "80.00 €", "14 days", 5257),
-          //                 offerCard("One month ticket", "Park One im Mona Einkaufsz...", "155.00 €", "30 days", 5257),
-          //                 offerCard("Short-term Parking Ti...", "Park One im Carré Fürther Fr...", "2.50 €", "60 min", 5283),
-          //                 offerCard("Day ticket", "Parkgarage Hochzoller Mitte", "5.00 €", "24 hrs", 5283),
-          //               ],
-          //             ),
-          //           ),
-          //         ],
-          //       ),
-          //     ),
-          //   ),
-          // ),
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: GestureDetector(
+              onVerticalDragUpdate: (details) {
+                setState(() {
+                  // Update the container height based on user drag
+                  containerHeight += details.primaryDelta!;
+                  containerHeight = containerHeight.clamp(100.0, MediaQuery.of(context).size.height);
+                });
+              },
+              onVerticalDragEnd: (details) {
+                setState(() {
+                  // Determine if the container should open or close based on the drag direction
+                  isContainerOpen = details.primaryVelocity! < 0;
+                  if (!isContainerOpen) {
+                    // Reset to initial height if dragging down and container is closing
+                    containerHeight = 100.0;
+                  }
+                });
+              },
+              child: AnimatedContainer(
+                duration: Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+                height: isContainerOpen ? MediaQuery.of(context).size.height : containerHeight,
+                color: Colors.white,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: <Widget>[
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.arrow_drop_up),
+                        Text(
+                          "Offers near You",
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Expanded(
+                      child: ListView(
+                        children: <Widget>[
+                          offerCard("Night ticket", "Faisal Mosque ...", "8.00 €", "14 hrs", 212),
+                          offerCard("1 week ticket", "Centaurus Islamabad...", "45.00 €", "7 days", 253),
+                          offerCard("2-Weeks-ticket", "E11...", "80.00 €", "14 days", 423),
+                          offerCard("One month ticket", "Air University...", "155.00 €", "30 days", 327),
+                          offerCard("Short-term Parking Ti...", "F11 Markaz...", "2.50 €", "60 min", 5283),
+                          offerCard("Day ticket", "G13/2", "5.00 €", "24 hrs", 5283),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -596,7 +593,7 @@ class _CombinedScreenState extends State<CombinedScreen> {
 
         _markers.add(
           Marker(
-            markerId: MarkerId('12345'),
+            markerId: MarkerId('1'),
             position: LatLng(33.6844 , 73.0479),
             icon: customIcon ?? BitmapDescriptor.defaultMarker, // Use custom icon or default marker
             infoWindow: InfoWindow(title: 'Islamabad, Pakistan'),
@@ -611,7 +608,97 @@ class _CombinedScreenState extends State<CombinedScreen> {
         );
         _markers.add(
           Marker(
-            markerId: MarkerId('123456'),
+            markerId: MarkerId('2'),
+            position: LatLng(33.6937 , 72.9805),
+            icon: customIcon ?? BitmapDescriptor.defaultMarker, // Use custom icon or default marker
+            infoWindow: InfoWindow(title: 'E11 Islamabad, Pakistan'),
+            onTap: () {
+              if (!isReserved) {
+                _displayBottomSheet(context, 'E11 Islamabad, Pakistan', LatLng(33.6937 , 72.9805), userLocation, distance, euid: 'eui-70b3d57ed8003056', username: 'raza242424@miraee');
+              }
+            },
+          ),
+
+
+        );
+        _markers.add(
+          Marker(
+            markerId: MarkerId('3'),
+            position: LatLng(33.6844 , 73.0479),
+            icon: customIcon ?? BitmapDescriptor.defaultMarker, // Use custom icon or default marker
+            infoWindow: InfoWindow(title: 'Islamabad, Pakistan'),
+            onTap: () {
+              if (!isReserved) {
+                _displayBottomSheet(context, 'Islamabad, Pakistan', LatLng(33.6844 , 73.0479), userLocation, distance, euid: 'eui-70b3d57ed8003056', username: 'raza242424@miraee');
+              }
+            },
+          ),
+
+
+        );
+        _markers.add(
+          Marker(
+            markerId: MarkerId('4'),
+            position: LatLng(33.7296 ,  73.0368),
+            icon: customIcon ?? BitmapDescriptor.defaultMarker, // Use custom icon or default marker
+            infoWindow: InfoWindow(title: 'Faisal Mosque Islamabad, Pakistan'),
+            onTap: () {
+              if (!isReserved) {
+                _displayBottomSheet(context, 'Faisal Mosque Islamabad, Pakistan', LatLng(33.7296 ,  73.0368), userLocation, distance, euid: 'eui-70b3d57ed8003056', username: 'raza242424@miraee');
+              }
+            },
+          ),
+
+
+        );
+        _markers.add(
+          Marker(
+            markerId: MarkerId('5'),
+            position: LatLng(33.7077 , 73.0498),
+            icon: customIcon ?? BitmapDescriptor.defaultMarker, // Use custom icon or default marker
+            infoWindow: InfoWindow(title: 'Centaurus Mall Islamabad, Pakistan'),
+            onTap: () {
+              if (!isReserved) {
+                _displayBottomSheet(context, 'Centaurus Mall Islamabad, Pakistan', LatLng(33.7077 , 73.0498), userLocation, distance, euid: 'eui-70b3d57ed8003056', username: 'raza242424@miraee');
+              }
+            },
+          ),
+
+
+        );
+        _markers.add(
+          Marker(
+            markerId: MarkerId('6'),
+            position: LatLng(33.6844 , 73.0479),
+            icon: customIcon ?? BitmapDescriptor.defaultMarker, // Use custom icon or default marker
+            infoWindow: InfoWindow(title: 'Islamabad, Pakistan'),
+            onTap: () {
+              if (!isReserved) {
+                _displayBottomSheet(context, 'Islamabad, Pakistan', LatLng(33.6844 , 73.0479), userLocation, distance, euid: 'eui-70b3d57ed8003056', username: 'raza242424@miraee');
+              }
+            },
+          ),
+
+
+        );
+        _markers.add(
+          Marker(
+            markerId: MarkerId('7'),
+            position: LatLng(33.6843 , 72.9885),
+            icon: customIcon ?? BitmapDescriptor.defaultMarker, // Use custom icon or default marker
+            infoWindow: InfoWindow(title: 'Islamabad, Pakistan'),
+            onTap: () {
+              if (!isReserved) {
+                _displayBottomSheet(context, 'Islamabad, Pakistan', LatLng(33.6843 , 72.9885), userLocation, distance, euid: 'eui-70b3d57ed8003056', username: 'raza242424@miraee');
+              }
+            },
+          ),
+
+
+        );
+        _markers.add(
+          Marker(
+            markerId: MarkerId('8'),
             position: LatLng(54.334760, 10.119170),
             icon: customIcon ?? BitmapDescriptor.defaultMarker, // Use custom icon or default marker
             infoWindow: InfoWindow(title: 'KITZ GmbH'),

@@ -106,11 +106,122 @@ class _PreviouseBookingState extends State<PreviouseBooking> {
     return data.map((key, value) => MapEntry(key, value.toString()));
   }
 
+  void _onFilterSelected(String filter) {
+    int days;
+
+    if (filter == '3 days') {
+      days = 3;
+    } else if (filter == '7 days') {
+      days = 7;
+    } else if (filter == '10 days') {
+      days = 10;
+    } else {
+      // Handle unexpected filter values, if necessary
+      days = 0;
+    }
+
+    fetchHistoryData(days);
+  }
+
+
+  Future<void> fetchHistoryData(int days) async {
+    try {
+      var response = await http.post(
+        Uri.parse('http://mi-park-backend-iota.vercel.app/filter-previous-bookings'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'userId': widget.userId, 'days': days}),
+      );
+
+      while (response.statusCode == 308) {
+        var redirectUrl = response.headers['location'];
+
+        response = await http.post(
+          Uri.parse(redirectUrl ?? ''),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({'userId': widget.userId, 'days': days}),
+        );
+      }
+
+      if (response.statusCode == 200) {
+        dynamic data = jsonDecode(response.body);
+        if (data is List) {
+          setState(() {
+            bookings = List<Map<String, String>>.from(data.map((e) => _convertDynamicToString(e)));
+            if (bookings.isEmpty) {
+              // Show toast message if no bookings are found
+
+              Fluttertoast.showToast(
+                msg: 'No Booking Found for $days days',
+                toastLength: Toast.LENGTH_SHORT,
+                gravity: ToastGravity.CENTER,
+                backgroundColor: Colors.redAccent,
+                textColor: Colors.white,
+                fontSize: 16.0,
+              );
+
+            } else {
+              // Sort bookings: active first, then expired sorted by end time descending
+              Fluttertoast.showToast(
+                msg: ' Booking Found for $days days',
+                toastLength: Toast.LENGTH_SHORT,
+                gravity: ToastGravity.BOTTOM,
+                backgroundColor: Colors.green,
+                textColor: Colors.white,
+                fontSize: 16.0,
+              );
+
+              bookings.sort((a, b) {
+                if (a['status'] == 'active' && b['status'] != 'active') {
+                  return -1;
+                } else if (a['status'] != 'active' && b['status'] == 'active') {
+                  return 1;
+                } else if (a['status'] == 'expired' && b['status'] == 'expired') {
+                  DateTime endA = DateTime.tryParse(a['end']!) ?? DateTime.now();
+                  DateTime endB = DateTime.tryParse(b['end']!) ?? DateTime.now();
+                  return endB.compareTo(endA); // Descending order
+                }
+                return 0;
+              });
+            }
+            print('Received bookings data: $bookings'); // Print received data
+          });
+        } else {
+          throw Exception('Invalid data format received');
+        }
+      } else {
+        print('Response status code: ${response.statusCode}');
+        print('Response body: ${response.body}');
+        throw Exception('Failed to load bookings');
+      }
+    } catch (error) {
+      print('Error fetching bookings: $error');
+      // Handle error
+    } finally {
+      setState(() {
+       //  _isLoading = false; // Stop the loader
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(AppLocalizations.of(context)!.bookingdetails),
+        actions: [
+          PopupMenuButton<String>(
+            onSelected: _onFilterSelected,
+            icon: Icon(Icons.history), // Use a history icon
+            itemBuilder: (BuildContext context) {
+              return {'3 days', '7 days', '10 days'}.map((String choice) {
+                return PopupMenuItem<String>(
+                  value: choice,
+                  child: Text(choice),
+                );
+              }).toList();
+            },
+          ),
+        ],
       ),
       body: Center(
         child: bookings.isEmpty
@@ -334,6 +445,8 @@ class _BookingCardState extends State<BookingCard> {
           'userId': widget.userId,
           'licensePlate': widget.licensePlate,
           'location': widget.location,
+          'euid' : widget.euid,
+          'username' : widget.username
         }),
       );
 
@@ -346,6 +459,8 @@ class _BookingCardState extends State<BookingCard> {
             'userId': widget.userId,
             'licensePlate': widget.licensePlate,
             'location': widget.location,
+            'euid' : widget.euid,
+            'username' : widget.username
           }),
 
         );
