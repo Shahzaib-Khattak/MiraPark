@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-// Make sure you have a MainScreen class available
 
 class SplashScreen extends StatefulWidget {
   @override
@@ -16,7 +15,6 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   @override
   void initState() {
     super.initState();
-    _checkLoginStatus();
     _controller = AnimationController(
       vsync: this,
       duration: Duration(milliseconds: 1500),
@@ -36,7 +34,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
       ),
     );
 
-    _controller.forward().whenComplete(() => checkLoginStatus());
+    _controller.forward().whenComplete(() => _checkLoginStatus());
   }
 
   Future<void> _checkLoginStatus() async {
@@ -44,10 +42,8 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     String? userId = prefs.getString('userId');
 
     if (userId != null && userId.isNotEmpty) {
-      // User is logged in, navigate to MainScreen
       Navigator.pushReplacementNamed(context, '/main_screen', arguments: userId);
     } else {
-      // User is not logged in, navigate to LoginScreen
       Navigator.pushReplacementNamed(context, '/login');
     }
   }
@@ -75,7 +71,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   FadeIn(
-                    delay: Duration(milliseconds: 300),
+                    delay: Duration(milliseconds: 500),
                     child: ScaleTransition(
                       scale: _logoScaleAnimation,
                       child: Container(
@@ -129,18 +125,5 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
         ],
       ),
     );
-  }
-
-  Future<void> checkLoginStatus() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    bool isLoggedIn = prefs.getBool('isLoggedIn') ?? false; // Default to false if not set
-
-    if (isLoggedIn) {
-      String userId = prefs.getString('userId') ?? ''; // Safely handle null values
-
-      Navigator.of(context).pushReplacementNamed('/main_screen', arguments: userId);
-    } else {
-      Navigator.of(context).pushReplacementNamed('/login');
-    }
   }
 }

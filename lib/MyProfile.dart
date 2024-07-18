@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'Login_Screen.dart';
 import 'package:image_picker/image_picker.dart';
 
 
@@ -20,13 +20,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String email = '';
   String phoneNumber = '';
   String password = '';
+  String profilePic = '';
   File? _image;
 
   @override
   void initState() {
     super.initState();
     fetchData();
-    print('User ID: ${widget.userId}');
+    print('User ewirouuuuuuuuuuuuuuuuuuuuundksanajhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhfID: ${widget.userId}');
   }
 
   Future<void> fetchData() async {
@@ -69,6 +70,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
       } else {
         // Handle error scenario
         print('Error fetching user details: ${response.reasonPhrase}');
+      }
+
+      // Fetch user data from Firestore
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection('googleuser').doc(widget.userId).get();
+      if (userDoc.exists) {
+        setState(() {
+          fullName = userDoc['name'] ?? fullName;
+          email = userDoc['email'] ?? email;
+          phoneNumber = userDoc['PhoneNumber'] ?? phoneNumber;
+          profilePic = userDoc['profilePic'] ?? profilePic;
+        });
+      } else {
+        print('No user found in Firestore with ID: ${widget.userId}');
       }
     } catch (error) {
       // Handle error scenario

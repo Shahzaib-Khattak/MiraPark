@@ -1,7 +1,9 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
+import 'package:mira_parkk/Payment.dart';
 import 'dart:async';
 import 'Models/polylines.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -78,10 +80,6 @@ class _BookingScreenState extends State<BookingScreen> {
 
     // Create a unique notification ID for this notification
     int notificationId = widget.userId.hashCode;
-
-    // Check if remaining time is less than 5 minutes
-
-    // Check if remaining time is less than or equal to 5 minutes
     if (remainingTime <= Duration(minutes: 5)) {
 
       // Create the notification content
@@ -118,9 +116,6 @@ class _BookingScreenState extends State<BookingScreen> {
         title: 'Booking Details', // Notification title
         body: 'Start time: ${DateFormat('hh:mm a').format(startTime)}<br>End time: ${DateFormat('hh:mm a').format(endTime)}', // Notification body
         notificationLayout: NotificationLayout.Default,
-
-
-
       );
 
       // Create the notification
@@ -159,10 +154,17 @@ class _BookingScreenState extends State<BookingScreen> {
       throw 'Could not launch $url'; // Handle error if unable to launch Google Maps
     }
   }
-
-
-
   //Book now
+  double calculateBookingPrice(DateTime startTime, DateTime endTime) {
+    Duration duration = endTime.difference(startTime);
+    int totalMinutes = duration.inMinutes;
+    double ratePerMinute = 0.10;
+    double totalPrice = totalMinutes * ratePerMinute;
+    return totalPrice;
+  }
+
+
+// Function to handle booking
   Future<void> Booknow() async {
     if (vehicleType.isEmpty || plateNumber.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -178,6 +180,8 @@ class _BookingScreenState extends State<BookingScreen> {
       isLoading = true;
     });
 
+    http.Response? response;
+
     try {
       EasyLoading.instance
         ..indicatorType = EasyLoadingIndicatorType.pouringHourGlass
@@ -190,7 +194,7 @@ class _BookingScreenState extends State<BookingScreen> {
         status: AppLocalizations.of(context)!.pleasewaituntillyourbookingisbeingconfirmed,
       );
 
-      var response = await http.post(
+      response = await http.post(
         Uri.parse('http://mi-park-backend-iota.vercel.app/create-booking'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
@@ -199,14 +203,14 @@ class _BookingScreenState extends State<BookingScreen> {
           'licensePlate': plateNumber,
           'location': widget.locationName,
           'userId': widget.userId,
-          'price': '10',
+          'price': calculateBookingPrice(startTime, endTime).toString(),
           'Email': 'naseem.shahzaib22@gmail.com',
-           'euid': widget.euid,
-           'username': widget.username,
+          'euid': widget.euid,
+          'username': widget.username,
         }),
       );
 
-      while (response.statusCode == 308) {
+      while (response!.statusCode == 308) {
         var redirectUrl = response.headers['location'];
         response = await http.post(
           Uri.parse(redirectUrl ?? ''),
@@ -217,7 +221,7 @@ class _BookingScreenState extends State<BookingScreen> {
             'licensePlate': plateNumber,
             'location': widget.locationName,
             'userId': widget.userId,
-            'price': '10',
+            'price': calculateBookingPrice(startTime, endTime).toString(),
             'Email': 'naseem.shahzaib22@gmail.com',
             'euid': widget.euid,
             'username': widget.username,
@@ -225,35 +229,56 @@ class _BookingScreenState extends State<BookingScreen> {
         );
       }
 
-      if (response.statusCode == 200 || response.statusCode == 504) {
+      if (response.statusCode == 200) {
         print("Booking Done");
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppLocalizations.of(context)!.bookingdonesuccessfully),
-            duration: Duration(seconds: 2),
-          ),
-        );
-
-
+        // Show success message or open booking details
         await Future.delayed(Duration(seconds: 1));
         _showBookingDetailsBottomSheet(context);
         showNotification(); // Ensure this is called
-        NotificationContent(id: 1 , channelKey: '');
-
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppLocalizations.of(context)!.bookingfailed),
-            duration: Duration(seconds: 5),
-          ),
+        NotificationContent(id: 1, channelKey: '');
+      } else if (response.statusCode == 404 || response.statusCode == 400) {
+        // Handle specific error cases based on response content
+        String responseBody = response.body;
+        if (responseBody.contains('Device already booked')) {
+          print('ERROR 404 RECEIVED WITH DEVICE ALREADY BOOKED');
+          Fluttertoast.showToast(
+            msg: 'Spot already booked',
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.BOTTOM,
+            timeInSecForIosWeb: 1,
+            backgroundColor: Colors.red,
+            textColor: Colors.white,
+          );
+        } else if (responseBody.contains('Booking not confirmed')) {
+          Fluttertoast.showToast(
+            msg: 'Booking Failed',
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.BOTTOM,
+            timeInSecForIosWeb: 1,
+            backgroundColor: Colors.red,
+            textColor: Colors.white,
+          );
+        }
+      } else if (response.statusCode == 400) {
+        // Handle other error cases
+        print('ERROR 400 RECEIVED');
+        Fluttertoast.showToast(
+          msg: 'Booking Failed',
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+          timeInSecForIosWeb: 1,
+          backgroundColor: Colors.red,
+          textColor: Colors.white,
         );
       }
     } catch (error) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error: $error'),
-          duration: Duration(seconds: 5),
-        ),
+      Fluttertoast.showToast(
+        msg: 'An unexpected error occurred',
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+        timeInSecForIosWeb: 1,
+        backgroundColor: Colors.red,
+        textColor: Colors.white,
       );
     } finally {
       EasyLoading.dismiss();
@@ -265,9 +290,14 @@ class _BookingScreenState extends State<BookingScreen> {
 
 
 
+
+
+
   @override
   void initState() {
     super.initState();
+    print('longitudeasdjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjj ' + widget.longitude.toString());
+    print('latitudecmnzxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxlajsddddddddddddddddddddd ' + widget.latitude.toString());
     // Initialize awesome_notifications
     AwesomeNotifications().initialize(
       'resource://drawable/app_icon',
@@ -615,6 +645,7 @@ class _BookingScreenState extends State<BookingScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(height: 10),
+
           Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.only(
@@ -731,7 +762,9 @@ class _BookingScreenState extends State<BookingScreen> {
           Center(
             child: ElevatedButton(
               onPressed: () {
-                navigateToGoogleMaps( widget.locationName.toString());
+                // navigateToGoogleMaps( widget.locationName.toString());
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (context) => PaymentScreen(startTime: startTime, endTime: endTime, licensePlate: widget.licensePlate.toString(), location: widget.locationName, userId: widget.userId, price: calculateBookingPrice(startTime, endTime).toString(), lat: widget.latitude.toString(), lng: widget.longitude.toString(),)));
               },
               style: ElevatedButton.styleFrom(
                 padding: EdgeInsets.symmetric(vertical: 10), // Adjust vertical padding to reduce height
@@ -744,7 +777,7 @@ class _BookingScreenState extends State<BookingScreen> {
                 elevation: 5, // Elevation
               ),
               child: Text(
-                'Get Direction',
+                'Pay Now',
                 style: TextStyle(fontSize: 16), // Text style
               ),
             ),

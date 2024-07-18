@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart' as http;
@@ -288,139 +290,169 @@ class _BookingCardState extends State<BookingCard> {
   Widget build(BuildContext context) {
     return Card(
       margin: EdgeInsets.all(16.0),
-      color: Colors.green[300],
-      shape: RoundedRectangleBorder(
+      color: Colors.transparent,
+      child: ClipRRect(
         borderRadius: BorderRadius.circular(16.0),
-      ),
-      elevation: 4.0,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
+        child: Stack(
           children: [
-            Text(
-              'License Plate: ${widget.licensePlate}',
-              style: TextStyle(fontSize: 16.0),
-            ),
-            SizedBox(height: 8.0),
-            Text(
-              'Start Time: ${widget.start}',
-              style: TextStyle(fontSize: 16.0),
-            ),
-            SizedBox(height: 8.0),
-            Text(
-              'End Time: ${widget.end}',
-              style: TextStyle(fontSize: 16.0),
-            ),
-            SizedBox(height: 8.0),
-            Text(
-              'Location: ${widget.location}',
-              style: TextStyle(fontSize: 16.0),
-            ),
-            SizedBox(height: 8.0),
-            Text(
-              'Status: ${widget.status}',
-              style: TextStyle(fontSize: 16.0),
-            ),
-            SizedBox(height: 8.0),
-            if (widget.status == 'active')
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  ElevatedButton(
-                    onPressed: () {
-                      cancelBooking(context);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red[300],
-                      shape: StadiumBorder(),
-                      alignment: Alignment.center,
-                    ),
-                    child: Text(
-                      'Cancel Booking',
-                      style: TextStyle(color: Colors.white),
-                    ),
+            // Background gradient effect
+            Positioned.fill(
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.white, Color(0xFF00C6FF)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                  Column(
-                    children: [
-                      Text(
-                        'Barrier Status',
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontSize: 16.0,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Switch(
-                        value: isBarrierUp,
-                        onChanged: (value) {
-                          setState(() {
-                            isBarrierUp = value;
-                          });
-                          if (isBarrierUp) {
-                            sendBarrierUpRequest();
-                          } else {
-                            sendBarrierDownRequest();
-                          }
-                        },
-                        activeColor: Colors.blue,
-                        inactiveTrackColor: Colors.white,
-                        activeTrackColor: Colors.white,
-                        inactiveThumbColor: Colors.black,
-                      ),
-                      Text(
-                        isBarrierUp ? 'Barrier Down' : 'Barrier Up',
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontSize: 16.0,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                ),
               ),
-            if (widget.status == 'expired')
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            ),
+            // Background frosted glass effect
+            Positioned.fill(
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
+                child: Container(
+                  color: Colors.black.withOpacity(0.2), // Semi-transparent background
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => BookingScreen(
-                            userId: widget.userId,
-                            licensePlate: widget.licensePlate,
-                            locationName: widget.location,
-                            distance: '',
-                            latitude: 0.0,
-                            longitude: 0.0,
-                            StartTime: '',
-                            EndTime: '',
-                            euid: widget.euid,
-                            username: widget.username,
+                  Text(
+                    'License Plate: $licensePlate',
+                    style: TextStyle(fontSize: 16.0, color: Colors.white),
+                  ),
+                  SizedBox(height: 8.0),
+                  Text(
+                    'Start Time: $start',
+                    style: TextStyle(fontSize: 16.0, color: Colors.white),
+                  ),
+                  SizedBox(height: 8.0),
+                  Text(
+                    'End Time: $end',
+                    style: TextStyle(fontSize: 16.0, color: Colors.white),
+                  ),
+                  SizedBox(height: 8.0),
+                  Text(
+                    'Location: $location',
+                    style: TextStyle(fontSize: 16.0, color: Colors.white),
+                  ),
+                  SizedBox(height: 8.0),
+                  Text(
+                    'Status: $status',
+                    style: TextStyle(fontSize: 16.0, color: Colors.white),
+                  ),
+                  SizedBox(height: 8.0),
+                  if (status == 'active')
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        ElevatedButton(
+                          onPressed: () {
+                            // Implement your cancelBooking function
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red[300],
+                            shape: StadiumBorder(),
+                            alignment: Alignment.center,
+                          ),
+                          child: Text(
+                            'Cancel Booking',
+                            style: TextStyle(color: Colors.white),
                           ),
                         ),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
-                      alignment: Alignment.centerRight,
+                        Column(
+                          children: [
+                            Text(
+                              'Barrier Status',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16.0,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Switch(
+                              value: isBarrierUp,
+                              onChanged: (value) {
+                                // Implement your barrier toggle functionality
+                              },
+                              activeColor: Colors.blue,
+                              inactiveTrackColor: Colors.white,
+                              activeTrackColor: Colors.white,
+                              inactiveThumbColor: Colors.black,
+                            ),
+                            Text(
+                              isBarrierUp ? 'Barrier Up' : 'Barrier Down',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16.0,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
-                    child: Text(
-                      'Rebook',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
+                  if (status == 'expired')
+                    Center(
+                      child : Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                         Container(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [Colors.green, Colors.blue],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: ElevatedButton(
+                                onPressed: () {
+                                  // Implement your rebook functionality
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.transparent,
+                                  shadowColor: Colors.transparent,
+                                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                ),
+                                child: Text(
+                                  'Rebook',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ),
+                            ),
+
+
+                        ],
+                      ),
+                    )
+
                 ],
               ),
+            ),
           ],
         ),
       ),
     );
   }
+
+  String get licensePlate => widget.licensePlate;
+  String get start => widget.start;
+  String get end => widget.end;
+  String get location => widget.location;
+  String get status => widget.status;
+  String get bookingEndTime => widget.bookingEndTime;
+  String get userId => widget.userId;
+  String get euid => widget.euid;
+  String get username => widget.username;
 
 
   Future<void> cancelBooking(BuildContext context) async {
@@ -468,11 +500,19 @@ class _BookingCardState extends State<BookingCard> {
 
       if (response.statusCode == 200) {
         print('Booking cancelled successfully');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Booking Cancelled Successfully'),
-            duration: Duration(seconds: 2),
-          ),
+        // ScaffoldMessenger.of(context).showSnackBar(
+        //   SnackBar(
+        //     content: Text('Booking Cancelled Successfully'),
+        //     duration: Duration(seconds: 2),
+        //   ),
+        // );
+        Fluttertoast.showToast(
+          msg: 'Booking cancelled successfully',
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+          backgroundColor: Colors.green,
+          textColor: Colors.white,
+          fontSize: 16.0,
         );
 
         await Future.delayed(Duration(seconds: 1));

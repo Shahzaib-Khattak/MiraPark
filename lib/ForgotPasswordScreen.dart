@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:mira_parkk/Login_Screen.dart';
 import 'SignUpVerificationScreen.dart';
 import 'package:http/http.dart' as http;
@@ -72,6 +73,16 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           _continueButtonPressed(context);
         });
+
+        // Redirect to the verification screen
+        Fluttertoast.showToast(
+          msg: 'verification code sent to Email ${_emailController.text}',
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+          backgroundColor: Colors.green,
+          textColor: Colors.white,
+          fontSize: 16.0,
+        );
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -124,7 +135,18 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       // Final check of the response
       if (response.statusCode == 200) {
         print('Password reset successfully');
-        Navigator.of(context).pushReplacementNamed('/login');
+        Fluttertoast.showToast(
+          msg: 'Password reset successfully',
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+          backgroundColor: Colors.green,
+          textColor: Colors.white,
+          fontSize: 16.0,
+        );
+        Navigator.pushReplacement(context,
+          MaterialPageRoute(
+            builder: (_) => Login_Screen( email: _emailController.text, updateLocale: (Locale ) {  }, ), ),
+        );
         // Handle successful password reset here
       } else {
         print('Failed to reset password: ${response.body}');
@@ -187,7 +209,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
-        builder: (context) => Login_Screen(updateLocale: (Locale ) {  },), // Replace LoginScreen with your actual login screen
+        builder: (context) => Login_Screen(email: _emailController.text,  updateLocale: (Locale ) {  },), // Replace LoginScreen with your actual login screen
       ),
     );
 

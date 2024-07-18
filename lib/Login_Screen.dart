@@ -1,11 +1,13 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:abstract_bloc/abstract_bloc.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:get/get.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:mira_parkk/Map_Screen.dart';
 import 'ForgotPasswordScreen.dart';
 import 'ThemeModelCubit.dart';
 import 'main.dart';
@@ -13,12 +15,15 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'package:mira_parkk/SignUpVerificationScreen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:crypto/crypto.dart';
+import 'package:uuid/uuid.dart';
+
 
 
 class Login_Screen extends StatefulWidget {
   final Function(Locale) updateLocale; // Add a callback function to update the locale
 
-  Login_Screen({Key? key, required this.updateLocale}) : super(key: key);
+  Login_Screen({Key? key, required this.updateLocale, required String email}) : super(key: key);
 
 
   @override
@@ -43,6 +48,109 @@ class _LoginScreenState extends State<Login_Screen> {
   TextEditingController _passwordController = TextEditingController();
   TextEditingController _phoneController = TextEditingController();
   GoogleSignIn _googleSignIn = GoogleSignIn(scopes: ['email']);
+  // DatabaseReference _database = FirebaseDatabase.instance.ref();
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+
+
+  Future<void> signin() async {
+    await GoogleSignInApi.logout(); // Ensure previous user is signed out
+    final user = await GoogleSignInApi.login();
+    if (user != null) {
+      print('Name: ${user.displayName}');
+      print('Email: ${user.email}');
+      print('Profile Picture: ${user.photoUrl}');
+
+      // Check if user already exists
+      final userQuery = await _firestore.collection('googleuser').where('email', isEqualTo: user.email).get();
+      String userId;
+
+      if (userQuery.docs.isNotEmpty) {
+        userId = userQuery.docs.first.id;
+        print('Existing user ID: $userId');
+      } else {
+        var uuid = Uuid();
+        userId = uuid.v4().replaceAll('-', '').substring(0, 24); // Generate a 24 character alphanumeric string
+        await _firestore.collection('googleuser').doc(userId).set({
+          'name': user.displayName,
+          'email': user.email,
+          'PhoneNumber': 'N/A',
+          'profilePic': user.photoUrl,
+        });
+        print('New user ID generated: $userId');
+      }
+
+      Fluttertoast.showToast(
+        msg: 'Sign in Successful',
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+        backgroundColor: Colors.green,
+        textColor: Colors.white,
+        fontSize: 16.0,
+      );
+
+      // Pass user ID to MainScreen
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => MainScreen(
+            userId: userId, // Pass the user ID here
+            updateLocale: widget.updateLocale,
+            locationName: 'Mira Park',
+          ),
+        ),
+      );
+
+      print('User information saved to Firestore');
+    } else {
+      print('Sign in failed');
+    }
+  }
+
+
+  Future<void> signup() async {
+    await GoogleSignInApi.logout(); // Ensure previous user is signed out
+    final user = await GoogleSignInApi.login();
+    if (user != null) {
+      print('Name: ${user.displayName}');
+      print('Email: ${user.email}');
+      print('Profile Picture: ${user.photoUrl}');
+
+      // Save user data to Firestore
+      await _firestore.collection('googleuser').doc(user.id).set({
+        'name': user.displayName,
+        'email': user.email,
+        'PhoneNumber' : 'N/A',
+        'profilePic': user.photoUrl,
+      });
+
+      print('Sign in successfulaskhddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddjsjkdahdjhasjkdhajkshd with userid: ${user.id}');
+      Fluttertoast.showToast(
+        msg: 'Sign Up Successful',
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+        backgroundColor: Colors.green,
+        textColor: Colors.white,
+        fontSize: 16.0,
+      );
+      // Pass user ID to MainScreen
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => MainScreen(
+            userId: user.id, // Pass the user ID here
+            updateLocale: widget.updateLocale,
+            locationName: 'Mira Park',
+          ),
+        ),
+      );
+
+      print('User information saved to Firestore and Realtime Database');
+    } else {
+      print('Sign in failed');
+    }
+  }
+
 
 
   Future<void> _handleSignIn() async {
@@ -645,7 +753,7 @@ class _LoginScreenState extends State<Login_Screen> {
                         onTap: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => ForgotPasswordScreen(showPasswordFields: false, email: _emailController.text,)),
+                            MaterialPageRoute(builder: (_) => ForgotPasswordScreen(showPasswordFields: false, email: _emailController.text,)),
                           ).then((value) {
                             // Handle result if needed
                           });
@@ -657,7 +765,7 @@ class _LoginScreenState extends State<Login_Screen> {
                     SizedBox(height: 20),
                     GestureDetector(
                       onTap: () {
-
+                        signin();
                       },
                       child: MaterialButton(
                         onPressed: () {
@@ -702,7 +810,7 @@ class _LoginScreenState extends State<Login_Screen> {
                       padding: const EdgeInsets.all(20.0),
                       child: TextButton(
                         onPressed: () {
-                          _handleSignIn();
+                          signup();
                         },
                         style: ButtonStyle(
                           foregroundColor: MaterialStateProperty.resolveWith((states) {
@@ -742,3 +850,11 @@ class _LoginScreenState extends State<Login_Screen> {
 
 }
 
+
+class GoogleSignInApi {
+  static final _googleSignIn = GoogleSignIn();
+
+  static Future<GoogleSignInAccount?> login() => _googleSignIn.signIn();
+
+  static Future<void> logout() => _googleSignIn.signOut();
+}

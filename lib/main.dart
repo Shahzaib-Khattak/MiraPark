@@ -1,3 +1,4 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'Map_Screen.dart';
@@ -11,6 +12,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
+import 'firebase_options.dart';
 
 
 
@@ -25,7 +27,11 @@ class LocaleCubit extends Cubit<Locale> {
 
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();  // Ensure plugin services are initialized
+  WidgetsFlutterBinding.ensureInitialized(); // Ensure plugin services are initialized
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  print('Firebase has been initialized');
   SharedPreferences prefs = await SharedPreferences.getInstance();
   EasyLoading.init();
   bool isLoggedIn = prefs.getBool('isLoggedIn') ?? false;  // Retrieve login status
@@ -101,7 +107,7 @@ class MyApp extends StatelessWidget {
             debugShowCheckedModeBanner: false,
             routes: {
               '/': (context) => SplashScreen(),
-              '/login': (context) => Login_Screen(updateLocale: updateLocale),
+              '/login': (context) => Login_Screen(email: '', updateLocale: updateLocale),
               '/main_screen': (context) {
                 final args = ModalRoute.of(context)!.settings.arguments as String;
                 return MainScreen(updateLocale: updateLocale, userId: args, locationName: '');
