@@ -52,15 +52,7 @@ android {
         multiDexEnabled true
     }
 
-    signingConfigs {
-        debug {
-            storeFile file('mirapark.jks')
-            storePassword 'android'
-            keyAlias 'mirapark'
-            keyPassword 'android'
 
-        }
-    }
     buildTypes {
         release {
             // TODO: Add your own signing config for the release build.
